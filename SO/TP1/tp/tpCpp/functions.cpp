@@ -41,10 +41,9 @@ void * bananinha(void * pessego) {
     int id = *teste;
 
     warmUpSomething(id);
-    eat(id);
-
     pthread_mutex_unlock(&mutex);
-
+    eat(id);
+    
     return NULL;
 }
 
