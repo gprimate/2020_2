@@ -2,9 +2,9 @@
 
 
 int main(int argc, char const *argv[]) {
-
+    
     int numCharacters = 8;
-    int numIterations = 3;
+    int numIterations = 2;
 
     pthread_t cenouras[numCharacters];
 
@@ -24,6 +24,7 @@ int main(int argc, char const *argv[]) {
     for(int i = 0; i < numCharacters; i++) {
         pthread_join(cenouras[i], NULL);
     }
+    
     
     
     return 0;
