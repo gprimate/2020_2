@@ -83,7 +83,7 @@ void wait(int id) {
         if (id > 5) {
             pthread_cond_wait(&(person)[id], &mutex);
 
-        } else if (checkPartner) {
+        } else if (checkPartner(id)) {
             pthread_cond_wait(&(person)[(id % 3) + 3], &mutex);
             pthread_cond_wait(&(person)[(id % 3)], &mutex);
 
@@ -165,4 +165,5 @@ void freeUser(int id) {
             }
         }
     } 
+    pthread_mutex_unlock(&mutex);
 }  
