@@ -64,9 +64,6 @@ int next(int id) {
 	if (deadlock()){
 		return -1;
 	}
-	int nextPerson;
-	bool completeCouple = false;
-	int idCouple = -1;
 
 	if (hasCompleteCouple()){
 

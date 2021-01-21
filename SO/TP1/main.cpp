@@ -4,7 +4,15 @@
 int main(int argc, char const *argv[]) {
     
     int numCharacters = 8;
-    int numIterations = 4;
+    int numIterations;
+
+    if (argc == 2) {
+		numIterations= atoi(argv[1]);
+
+	} else {
+		std::cout << "Invalid parameters!";
+		exit(1);
+	}
 
     pthread_t cenouras[numCharacters];
     pthread_t raj;
