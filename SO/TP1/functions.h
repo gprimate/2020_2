@@ -24,7 +24,7 @@ void enfileirarCasal(int id);
 
 void checkAndUpdateCasal(int id);
 
-int next();
+int next(int id);
 
 int timeDoingOtherThings();
 
@@ -45,3 +45,5 @@ void *inicia_raj(void *arg);
 std::string getName(int id);
 
 bool checkId(int id);
+
+bool hasCompleteCouple();

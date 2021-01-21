@@ -4,7 +4,7 @@
 int main(int argc, char const *argv[]) {
     
     int numCharacters = 8;
-    int numIterations = 5;
+    int numIterations = 4;
 
     pthread_t cenouras[numCharacters];
     pthread_t raj;

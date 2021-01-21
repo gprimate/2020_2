@@ -60,30 +60,68 @@ void checkAndUpdateCasal(int id) {
 	}
 }
 
-int next() {
+int next(int id) {
 	if (deadlock()){
 		return -1;
 	}
+	int nextPerson;
+	bool completeCouple = false;
+	int idCouple = -1;
 
-	if(casal()){
+	if (hasCompleteCouple()){
+
+		bool couples[3] = {false, false, false};
+
+		for (int i = 0; i < 3; i++) {
+			if (precedenciaCasal[i].second >= 0){
+				couples[i] = true;
+			}
+		}
+
+		if ((couples[0]) && (couples[1]) && (!couples[2])){
+			return precedenciaCasal[0].first;
+
+		} else if ((couples[0]) && (!couples[1]) && (couples[2])){
+			return precedenciaCasal[2].first;
+
+		} else if ((couples[0]) && (!couples[1]) && (!couples[2])){
+			return precedenciaCasal[0].first;
+
+		} else if (!(couples[0]) && (couples[1]) && (couples[2])){
+			return precedenciaCasal[1].first;
+
+		} else if (!(couples[0]) && (!couples[1]) && (couples[2])){
+			return precedenciaCasal[2].first;
+
+		} else if (!(couples[0]) && (couples[1]) && (!couples[2])){
+			return precedenciaCasal[1].first;
+		}
+
+	} else if(casal()){
 		if((esperaCasal[0]) && (esperaCasal[1]) && (!esperaCasal[2])) {
 			return precedenciaCasal[0].first;
+			
 		}
 		else if((esperaCasal[0]) && (!esperaCasal[1]) && (esperaCasal[2])) {
 			return precedenciaCasal[2].first;
+			
 		}
 		else if((esperaCasal[0]) && (!esperaCasal[1]) && (!esperaCasal[2])) {
 			return precedenciaCasal[0].first;
+			
 		} 
 		else if((!esperaCasal[0]) && (esperaCasal[1]) && (esperaCasal[2])) {
 			return precedenciaCasal[1].first;
+			
 		}
 		else if((!esperaCasal[0]) && (!esperaCasal[1]) && (esperaCasal[2])) {
 			return precedenciaCasal[2].first;
+			
 		}
 		else if((!esperaCasal[0]) && (esperaCasal[1]) && (!esperaCasal[2])) {
 			return precedenciaCasal[1].first;
 		}
+
 	} else {
 		if((espera[0] || espera[1]) && !(espera[4] || espera[5])) {
 			return (espera[0] == 1? 0 : 1);
@@ -112,14 +150,7 @@ int timeDoingOtherThings() {
 }
 
 void verifica() {
-	/*
-	std::cout << "verificnado" << std::endl;
-	for (int i = 0; i < 8; i++) {
-		std::cout << espera[i] << "\t";
-	
-	}
-	std::cout << "\n";
-	*/
+
 	if (deadlock() && forno == 0) {
 
 		int chosen;
@@ -134,6 +165,7 @@ void verifica() {
 
 		pthread_cond_signal(&pessoas[chosen]);
 		std::cout << "Raj detectou um deadlock, liberando " << getName(chosen) << "." << std::endl;
+
 		pthread_mutex_unlock(&monitor);
 	}
 }
@@ -172,14 +204,14 @@ void esquentar(int id) {
 void liberar(int id) {
 	pthread_mutex_lock(&monitor);
 	std::cout << getName(id) << " vai comer" << std::endl;
+
 	forno = 0;
 
 	if (id < 6) {
 		checkAndUpdateCasal(id);
 	}
 
-	int nextUse = next();
-	std::cout << nextUse <<std::endl;
+	int nextUse = next(id);
 
 	if (nextUse >= 0) {
 		pthread_cond_signal(&pessoas[nextUse]);
@@ -191,7 +223,6 @@ void liberar(int id) {
 
 void comer() {
 	int sleepTime = timeDoingOtherThings();
-	//std::cout << sleepTime << std::endl;
 	sleep(sleepTime);
 }
 
@@ -259,3 +290,14 @@ std::string getName(int id) {
 bool checkId(int id) {
 	return (espera[id] ? true : false);
 }
+
+bool hasCompleteCouple() {
+	for (int i = 0; i < 3; i++) {
+
+		if (precedenciaCasal[i].second >= 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
