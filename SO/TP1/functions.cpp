@@ -51,7 +51,7 @@ void enfileirarCasal(int id) {
 void checkAndUpdateCasal(int id) {
 	int casalId = getCasalId(id);
 	if(esperaCasal[casalId]){
-		if(precedenciaCasal[casalId].second != -2){ //pq -2?
+		if(precedenciaCasal[casalId].second != -2){ 
 			precedenciaCasal[casalId].first = precedenciaCasal[casalId].second;
 			precedenciaCasal[casalId].second = -2;
 		} else {
@@ -101,7 +101,7 @@ int next() {
 			return 7;
 		}
 	}
-	return -2; // pra nao aparecer warning no console
+	return -2;
 }
 
 
@@ -111,70 +111,50 @@ int timeDoingOtherThings() {
     return (int) time;
 }
 
-/*
 void verifica() {
-	if (forno == 0 && deadlock()){
-		srand(time(NULL));
-		int chosen = rand() % 3;
-
-		std::string name = "";
-		if(esperaCasal[chosen] = 1){
-			if(precedenciaCasal[chosen].first) {
-				name = "nome1";
-				pthread_cond_signal(&(pessoas[precedenciaCasal[chosen].first])); //estavam sem pessoas, só com precedenciaCasal
-			}
-
-			if(precedenciaCasal[chosen].second) {
-				if(name == "") {
-					name = "nome2";
-				}
-				pthread_cond_signal(&(pessoas[precedenciaCasal[chosen].second])); //estava sem pessoas
-		} else {
-			if(espera[chosen * 2]){  //estava pessoas[chosen * 2]
-				name = "nome pessoa";
-				pthread_cond_signal(&(pessoas[chosen * 2]));
-			} else {
-				name = "nome pessoa2";
-				pthread_cond_signal(&(pessoas[chosen * 2 + 1]));
-				}
-			}
-			std::cout << "Raj detectou um deadlock, liberando " << name << "." << std::endl;
-		}
-	}
-}
-*/
-
-void verifica() {
+	/*
+	std::cout << "verificnado" << std::endl;
+	for (int i = 0; i < 8; i++) {
+		std::cout << espera[i] << "\t";
 	
-	if (forno == 0 && deadlock()) {
-		int chosen = -1;
+	}
+	std::cout << "\n";
+	*/
+	if (deadlock() && forno == 0) {
+
+		int chosen;
+
 		do {
 			double id = drand48();
-        	id = id * 8;
+        	id = id * 6;
 			chosen = (int) id;
 		} while (!checkId(chosen));
 
+		pthread_mutex_lock(&monitor);
+
+		pthread_cond_signal(&pessoas[chosen]);
 		std::cout << "Raj detectou um deadlock, liberando " << getName(chosen) << "." << std::endl;
+		pthread_mutex_unlock(&monitor);
 	}
 }
+
 
 void esperar(int id) {
 	pthread_mutex_lock(&monitor);
 	espera[id] = 1;
 
 	std::cout << getName(id) << " quer usar o forno" << std::endl; // adicionei essa linha
+
 	if(forno != 0){
 		if(id < 6) {
 			if(espera[getOutroMembroCasal(id)]){
 				enfileirarCasal(id);
-				pthread_cond_wait(&pessoas[id], &monitor);
 			}
 		}
+		pthread_cond_wait(&pessoas[id], &monitor);
 	}
 
 	forno = 1;
-	//std::cout << "HM TO ESQUENTANDO MENOR" << std::endl; tirei essa
-
 
 	if (espera[id] == 1) {
 		espera[id] = 0;
@@ -185,7 +165,7 @@ void esperar(int id) {
 
 void esquentar(int id) {
 
-	std::cout << getName(id) << " começa a esquentar algo."<< std::endl;
+	std::cout << getName(id) << " começa a esquentar algo"<< std::endl;
 	sleep(1);
 }
 
@@ -194,16 +174,25 @@ void liberar(int id) {
 	std::cout << getName(id) << " vai comer" << std::endl;
 	forno = 0;
 
-	int nextUse = next();
-	checkAndUpdateCasal(id);
+	if (id < 6) {
+		checkAndUpdateCasal(id);
+	}
 
-	pthread_cond_signal(&pessoas[nextUse]);
+	int nextUse = next();
+	std::cout << nextUse <<std::endl;
+
+	if (nextUse >= 0) {
+		pthread_cond_signal(&pessoas[nextUse]);
+
+	}
 
 	pthread_mutex_unlock(&monitor);
 }
 
 void comer() {
-	sleep(timeDoingOtherThings());
+	int sleepTime = timeDoingOtherThings();
+	//std::cout << sleepTime << std::endl;
+	sleep(sleepTime);
 }
 
 void *inicia_casais(void *arg) {
