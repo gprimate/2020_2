@@ -3,6 +3,7 @@
 
 int main(int argc, char const *argv[]) {
     
+    
     int numCharacters = 8;
     int numIterations;
 
