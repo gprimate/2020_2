@@ -23,9 +23,30 @@ bool casal() {
 }
 
 bool deadlock(){
-	if((espera[0] || espera[1]) && (espera[2] || espera[3]) && (espera[4] || espera[5])) {
-		if((esperaCasal[0] && esperaCasal[1] && esperaCasal[2]) || !casal()) {
+	// Se há pelo menos um membro de cada casal esperando, existe a possibilidade de Deadlock
+	if((espera[0] || espera[1]) && (espera[2] || espera[3]) && (espera[4] || espera[5])) { 
+		bool couples[3] = {false, false, false};
+		int precedencia = 0;
+		for (int i = 0; i < 3; i++) {
+			if (precedenciaCasal[i].second >= 0){
+				couples[i] = true;
+				precedencia++;
+			}
+		}
+
+		//Se há três casais completos ocorre Deadlock
+		if(couples[0] && couples[1] && couples[2]){ 
 			return true;
+		//Se não há nenhum casal completo, pode ocorrer Deadlock se nenhum ou todos tiverem prioridade de casal incompleto
+		} else if (!couples[0] && !couples[1] && !couples[2]) {
+			switch(precedencia){
+				case 0:
+					return true;
+				case 3:
+					return true;
+				default:
+					return false;
+			}
 		}
 	}
 	return false;
@@ -141,9 +162,9 @@ int next(int id) {
 
 
 int timeDoingOtherThings() {
-    double time = drand48();
-    time = time * 4 + 3;
-    return (int) time;
+    srand (time(NULL));
+    int time = rand() % 3 + 1;
+    return time;
 }
 
 void verifica() {
@@ -151,15 +172,15 @@ void verifica() {
 	if (deadlock() && forno == 0) {
 
 		int chosen;
+		srand(time(NULL));
 
 		do {
-			double id = drand48();
-        	id = id * 6;
-			chosen = (int) id;
+			chosen = rand() % 6;
 		} while (!checkId(chosen));
 
 		pthread_mutex_lock(&monitor);
 
+		//std::cout << espera[0] << espera[1] << espera[2] << espera[3] << espera[4] << espera[5] << espera[6] << espera[7] << std::endl;
 		pthread_cond_signal(&pessoas[chosen]);
 		std::cout << "Raj detectou um deadlock, liberando " << getName(chosen) << "." << std::endl;
 
@@ -194,14 +215,14 @@ void esperar(int id) {
 
 void esquentar(int id) {
 
-	std::cout << getName(id) << " começa a esquentar algo"<< std::endl;
+	std::cout << getName(id) << " começa a esquentar algo" << std::endl;
 	sleep(1);
 }
 
 void liberar(int id) {
 	pthread_mutex_lock(&monitor);
-	std::cout << getName(id) << " vai comer" << std::endl;
 
+	std::cout << getName(id) << " vai comer" << std::endl;
 	forno = 0;
 
 	if (id < 6) {
@@ -230,6 +251,8 @@ void *inicia_casais(void *arg) {
 	pthread_mutex_unlock(&contador);
 
 	ThreadArg *t = (ThreadArg *) arg;
+	srand(time(NULL));
+	sleep(rand() % 3);
 
 	while ((*t).num_iteracoes > 0) {
 
@@ -237,7 +260,6 @@ void *inicia_casais(void *arg) {
 		esquentar((*t).id);
 		liberar((*t).id);
 		comer();
-
 		(*t).num_iteracoes--;
 	}
 
@@ -249,8 +271,8 @@ void *inicia_casais(void *arg) {
 }
 
 void *inicia_raj(void *arg) {
-
 	while (threads_ativas > 0) {
+
 		verifica();
 		sleep(5);
 	}
@@ -273,7 +295,7 @@ std::string getName(int id) {
     case 4:
         return "Leonard";
     case 5:
-        return "Penyy";
+        return "Penny";
     case 6:
         return "Stuart";
     case 7: 

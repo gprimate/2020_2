@@ -15,10 +15,9 @@ int main(int argc, char const *argv[]) {
 		exit(1);
 	}
 
-    pthread_t cenouras[numCharacters];
+    pthread_t casais[numCharacters];
     pthread_t raj;
 
-    int ids[numCharacters];
     ThreadArg info[numCharacters];
 
     for (int i = 0; i < numCharacters; i++) {
@@ -28,12 +27,12 @@ int main(int argc, char const *argv[]) {
     }
 
     for (int i = 0; i < numCharacters; i++) {
-        pthread_create(&(cenouras[i]), NULL, inicia_casais, &info[i]);
+        pthread_create(&(casais[i]), NULL, inicia_casais, &info[i]);
     }
     pthread_create(&raj, NULL, inicia_raj, NULL);
 
     for(int i = 0; i < numCharacters; i++) {
-        pthread_join(cenouras[i], NULL);
+        pthread_join(casais[i], NULL);
     }
     pthread_join(raj, NULL);
     
