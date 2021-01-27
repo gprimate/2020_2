@@ -81,6 +81,7 @@ void checkAndUpdateCasal(int id) {
 	}
 }
 
+// Função responsável por verificar quem será o próximo a utilizar o forno
 int next(int id) {
 	if (deadlock()){
 		return -1;
