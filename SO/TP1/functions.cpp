@@ -22,7 +22,9 @@ bool casal() {
 	}
 }
 
+// Função responsável por verificar se existe um deadlock
 bool deadlock(){
+
 	// Se há pelo menos um membro de cada casal esperando, existe a possibilidade de Deadlock
 	if((espera[0] || espera[1]) && (espera[2] || espera[3]) && (espera[4] || espera[5])) { 
 		bool couples[3] = {false, false, false};
@@ -52,15 +54,17 @@ bool deadlock(){
 	return false;
 }
 
-
+// Funcão que retorna o id do casal
 int getCasalId(int id){
 	return id / 2;
 }
 
+//Função que retorna o id do cônjuge de um personagem
 int getOutroMembroCasal(int id){
 	return ((id % 2 == 0) ? id + 1 : id - 1);
 }
 
+//Função responsável por enfilerar um casal
 void enfileirarCasal(int id) {
 	int casalId = getCasalId(id);
 	esperaCasal[casalId] = 1;
@@ -69,6 +73,8 @@ void enfileirarCasal(int id) {
 	precedenciaCasal[casalId].second = id;
 }
 
+
+//Função que atualiza os casais quando um novo personagem entra
 void checkAndUpdateCasal(int id) {
 	int casalId = getCasalId(id);
 	if(esperaCasal[casalId]){
@@ -161,12 +167,13 @@ int next(int id) {
 	return -2;
 }
 
-
+//Função que calcula o tempo que os personagens gastam comendon e trabalhando
 int timeDoingOtherThings() {
     srand (time(NULL));
     int time = rand() % 3 + 1;
     return time;
 }
+
 
 void verifica() {
 
@@ -181,7 +188,6 @@ void verifica() {
 
 		pthread_mutex_lock(&monitor);
 
-		//std::cout << espera[0] << espera[1] << espera[2] << espera[3] << espera[4] << espera[5] << espera[6] << espera[7] << std::endl;
 		pthread_cond_signal(&pessoas[chosen]);
 		std::cout << "Raj detectou um deadlock, liberando " << getName(chosen) << "." << std::endl;
 
