@@ -189,7 +189,7 @@ void verifica() {
 		pthread_mutex_lock(&monitor);
 
 		pthread_cond_signal(&pessoas[chosen]);
-		std::cout << "Raj detectou um deadlock, liberando " << getName(chosen) << "." << std::endl;
+		std::cout << "Raj detectou um deadlock, liberando " << getName(chosen) << std::endl;
 
 		pthread_mutex_unlock(&monitor);
 	}
@@ -251,6 +251,12 @@ void comer() {
 	sleep(sleepTime);
 }
 
+void trabalhar(int id) {
+	int sleepTime = timeDoingOtherThings();
+	std::cout << getName(id) << " voltou ao trabalho" << std::endl;
+	sleep(sleepTime);
+}
+
 void *inicia_casais(void *arg) {
 
 	pthread_mutex_lock(&contador);
@@ -267,6 +273,7 @@ void *inicia_casais(void *arg) {
 		esquentar((*t).id);
 		liberar((*t).id);
 		comer();
+		trabalhar((*t).id);
 		(*t).num_iteracoes--;
 	}
 

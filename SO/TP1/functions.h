@@ -47,3 +47,5 @@ std::string getName(int id);
 bool checkId(int id);
 
 bool hasCompleteCouple();
+
+void trabalhar(int id);
