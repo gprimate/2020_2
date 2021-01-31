@@ -4,8 +4,10 @@
 int espera[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 pthread_cond_t pessoas[8];
 int esperaCasal[3] = {0, 0, 0};
+int esperaCasalIncompleto[3] = {0, 0, 0};
 std::array<std::pair<int, int>, 3> precedenciaCasal = { {{-1, -1}, {-1, -1}, {-1, -1}} };
-int casalInterrompido[3] = {0, 0, 0};
+
+
 int threads_ativas = 0;
 
 int forno = 0;
@@ -22,34 +24,42 @@ bool casal() {
 	}
 }
 
+bool casalIncompleto() {
+	if(esperaCasalIncompleto[0] || esperaCasalIncompleto[1] || esperaCasalIncompleto[2]) {
+		return true;
+	}
+	return false;
+}
+
+int countCasalIncompleto() {
+	int count = 0;
+	for(int i = 0; i < 3; i++){
+		if(esperaCasalIncompleto[i]){
+			count++;
+		}
+	}
+	return count;
+}
+
 // Função responsável por verificar se existe um deadlock
 bool deadlock(){
 
 	// Se há pelo menos um membro de cada casal esperando, existe a possibilidade de Deadlock
 	if((espera[0] || espera[1]) && (espera[2] || espera[3]) && (espera[4] || espera[5])) { 
-		bool couples[3] = {false, false, false};
-		int precedencia = 0;
-		for (int i = 0; i < 3; i++) {
-			if (precedenciaCasal[i].second >= 0){
-				couples[i] = true;
-				precedencia++;
+
+		//Se há três casais completos ocorre Deadlock
+		if(esperaCasal[0] && esperaCasal[1] && esperaCasal[2]){ 
+			return true;
+
+		//Se não há nenhum casal completo, pode ocorrer Deadlock se nenhum ou todos tiverem prioridade de casal incompleto
+		} else if (casalIncompleto()) {
+			if(countCasalIncompleto() == 3){
+				return true;
+			} else {
+				return false;
 			}
 		}
 
-		//Se há três casais completos ocorre Deadlock
-		if(couples[0] && couples[1] && couples[2]){ 
-			return true;
-		//Se não há nenhum casal completo, pode ocorrer Deadlock se nenhum ou todos tiverem prioridade de casal incompleto
-		} else if (!couples[0] && !couples[1] && !couples[2]) {
-			switch(precedencia){
-				case 0:
-					return true;
-				case 3:
-					return true;
-				default:
-					return false;
-			}
-		}
 	}
 	return false;
 }
@@ -68,23 +78,24 @@ int getOutroMembroCasal(int id){
 void enfileirarCasal(int id) {
 	int casalId = getCasalId(id);
 	esperaCasal[casalId] = 1;
+	esperaCasalIncompleto[casalId] = 0;
 
 	precedenciaCasal[casalId].first = getOutroMembroCasal(id);
 	precedenciaCasal[casalId].second = id;
 }
 
 
-//Função que atualiza os casais quando um novo personagem entra
+//Função que atualiza os casais quando um novo personagem é liberado
 void checkAndUpdateCasal(int id) {
 	int casalId = getCasalId(id);
 	if(esperaCasal[casalId]){
-		if(precedenciaCasal[casalId].second != -2){ 
-			precedenciaCasal[casalId].first = precedenciaCasal[casalId].second;
-			precedenciaCasal[casalId].second = -2;
-		} else {
-			esperaCasal[casalId] = 0;
-		}	
+		precedenciaCasal[casalId].first = precedenciaCasal[casalId].second;
+		esperaCasalIncompleto[casalId] = 1;
+	} else if(esperaCasalIncompleto[casalId]){
+		esperaCasalIncompleto[casalId] = 0;
 	}
+
+	esperaCasal[casalId] = 0;
 }
 
 // Função responsável por verificar quem será o próximo a utilizar o forno
@@ -93,57 +104,50 @@ int next(int id) {
 		return -1;
 	}
 
-	if (hasCompleteCouple()){
+	if (casal()){
 
-		bool couples[3] = {false, false, false};
-
-		for (int i = 0; i < 3; i++) {
-			if (precedenciaCasal[i].second >= 0){
-				couples[i] = true;
-			}
-		}
-
-		if ((couples[0]) && (couples[1]) && (!couples[2])){
+		if ((esperaCasal[0]) && (esperaCasal[1]) && (!esperaCasal[2])){
 			return precedenciaCasal[0].first;
 
-		} else if ((couples[0]) && (!couples[1]) && (couples[2])){
+		} else if ((esperaCasal[0]) && (!esperaCasal[1]) && (esperaCasal[2])){
 			return precedenciaCasal[2].first;
 
-		} else if ((couples[0]) && (!couples[1]) && (!couples[2])){
+		} else if ((esperaCasal[0]) && (!esperaCasal[1]) && (!esperaCasal[2])){
 			return precedenciaCasal[0].first;
 
-		} else if (!(couples[0]) && (couples[1]) && (couples[2])){
+		} else if (!(esperaCasal[0]) && (esperaCasal[1]) && (esperaCasal[2])){
 			return precedenciaCasal[1].first;
 
-		} else if (!(couples[0]) && (!couples[1]) && (couples[2])){
+		} else if (!(esperaCasal[0]) && (!esperaCasal[1]) && (esperaCasal[2])){
 			return precedenciaCasal[2].first;
 
-		} else if (!(couples[0]) && (couples[1]) && (!couples[2])){
+		} else if (!(esperaCasal[0]) && (esperaCasal[1]) && (!esperaCasal[2])){
 			return precedenciaCasal[1].first;
 		}
 
-	} else if(casal()){
-		if((esperaCasal[0]) && (esperaCasal[1]) && (!esperaCasal[2])) {
+	} else if(casalIncompleto()){
+
+		if((esperaCasalIncompleto[0]) && (esperaCasalIncompleto[1]) && (!esperaCasalIncompleto[2])) {
 			return precedenciaCasal[0].first;
 			
 		}
-		else if((esperaCasal[0]) && (!esperaCasal[1]) && (esperaCasal[2])) {
+		else if((esperaCasalIncompleto[0]) && (!esperaCasalIncompleto[1]) && (esperaCasalIncompleto[2])) {
 			return precedenciaCasal[2].first;
 			
 		}
-		else if((esperaCasal[0]) && (!esperaCasal[1]) && (!esperaCasal[2])) {
+		else if((esperaCasalIncompleto[0]) && (!esperaCasalIncompleto[1]) && (!esperaCasalIncompleto[2])) {
 			return precedenciaCasal[0].first;
 			
 		} 
-		else if((!esperaCasal[0]) && (esperaCasal[1]) && (esperaCasal[2])) {
+		else if((!esperaCasalIncompleto[0]) && (esperaCasalIncompleto[1]) && (esperaCasalIncompleto[2])) {
 			return precedenciaCasal[1].first;
 			
 		}
-		else if((!esperaCasal[0]) && (!esperaCasal[1]) && (esperaCasal[2])) {
+		else if((!esperaCasalIncompleto[0]) && (!esperaCasalIncompleto[1]) && (esperaCasalIncompleto[2])) {
 			return precedenciaCasal[2].first;
 			
 		}
-		else if((!esperaCasal[0]) && (esperaCasal[1]) && (!esperaCasal[2])) {
+		else if((!esperaCasalIncompleto[0]) && (esperaCasalIncompleto[1]) && (!esperaCasalIncompleto[2])) {
 			return precedenciaCasal[1].first;
 		}
 
@@ -176,7 +180,6 @@ int timeDoingOtherThings() {
 
 
 void verifica() {
-
 	if (deadlock() && forno == 0) {
 
 		int chosen;
@@ -184,7 +187,8 @@ void verifica() {
 
 		do {
 			chosen = rand() % 6;
-		} while (!checkId(chosen));
+		} while (!espera[chosen]);
+
 
 		pthread_mutex_lock(&monitor);
 
@@ -221,7 +225,6 @@ void esperar(int id) {
 }
 
 void esquentar(int id) {
-
 	std::cout << getName(id) << " começa a esquentar algo" << std::endl;
 	sleep(1);
 }
@@ -252,8 +255,11 @@ void comer() {
 }
 
 void trabalhar(int id) {
+	std::stringstream message;
+	message << getName(id) << " voltou ao trabalho" << std::endl;
+	std::cout << message.str();
+
 	int sleepTime = timeDoingOtherThings();
-	std::cout << getName(id) << " voltou ao trabalho" << std::endl;
 	sleep(sleepTime);
 }
 
@@ -319,18 +325,3 @@ std::string getName(int id) {
         return NULL;
     }
 }
-
-bool checkId(int id) {
-	return (espera[id] ? true : false);
-}
-
-bool hasCompleteCouple() {
-	for (int i = 0; i < 3; i++) {
-
-		if (precedenciaCasal[i].second >= 0) {
-			return true;
-		}
-	}
-	return false;
-}
-

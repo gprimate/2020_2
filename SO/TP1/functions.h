@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <string>
+#include <sstream>
 
 typedef struct {
 	int id;
